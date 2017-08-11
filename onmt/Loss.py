@@ -15,7 +15,7 @@ def NMTCriterion(vocabSize, opt):
     weight = torch.ones(vocabSize)
     weight[onmt.Constants.PAD] = 0
     crit = nn.NLLLoss(weight, size_average=False)
-    if opt.gpus:
+    if opt.gpuid:
         crit.cuda()
     return crit
 

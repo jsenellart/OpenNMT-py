@@ -156,7 +156,7 @@ parser.add_argument('-pre_word_vecs_dec',
                     See README for specific formatting instructions.""")
 
 # GPU
-parser.add_argument('-gpus', default=[], nargs='+', type=int,
+parser.add_argument('-gpuid', default=[], nargs='+', type=int,
                     help="Use CUDA on the listed devices.")
 
 parser.add_argument('-log_interval', type=int, default=50,
@@ -177,11 +177,11 @@ print(opt)
 if opt.seed > 0:
     torch.manual_seed(opt.seed)
 
-if torch.cuda.is_available() and not opt.gpus:
-    print("WARNING: You have a CUDA device, should run with -gpus 0")
+if torch.cuda.is_available() and not opt.gpuid:
+    print("WARNING: You have a CUDA device, should run with -gpuid 0")
 
-if opt.gpus:
-    cuda.set_device(opt.gpus[0])
+if opt.gpuid:
+    cuda.set_device(opt.gpuid[0])
     if opt.seed > 0:
         torch.cuda.manual_seed(opt.seed)
 
@@ -297,12 +297,12 @@ def trainModel(model, trainData, validData, dataset, optim):
         #  (3) update the learning rate
         optim.updateLearningRate(valid_stats.ppl(), epoch)
 
-        model_state_dict = (model.module.state_dict() if len(opt.gpus) > 1
+        model_state_dict = (model.module.state_dict() if len(opt.gpuid) > 1
                             else model.state_dict())
         model_state_dict = {k: v for k, v in model_state_dict.items()
                             if 'generator' not in k}
         generator_state_dict = (model.generator.module.state_dict()
-                                if len(opt.gpus) > 1
+                                if len(opt.gpuid) > 1
                                 else model.generator.state_dict())
         #  (4) drop a checkpoint
         if epoch >= opt.start_checkpoint_at:
@@ -340,13 +340,13 @@ def main():
         dataset['dicts'] = checkpoint['dicts']
 
     trainData = onmt.Dataset(dataset['train']['src'],
-                             dataset['train']['tgt'], opt.batch_size, opt.gpus,
+                             dataset['train']['tgt'], opt.batch_size, opt.gpuid,
                              data_type=dataset.get("type", "text"),
                              srcFeatures=dataset['train'].get('src_features'),
                              tgtFeatures=dataset['train'].get('tgt_features'),
                              alignment=dataset['train'].get('alignments'))
     validData = onmt.Dataset(dataset['valid']['src'],
-                             dataset['valid']['tgt'], opt.batch_size, opt.gpus,
+                             dataset['valid']['tgt'], opt.batch_size, opt.gpuid,
                              volatile=True,
                              data_type=dataset.get("type", "text"),
                              srcFeatures=dataset['valid'].get('src_features'),
@@ -388,7 +388,7 @@ def main():
         if opt.share_decoder_embeddings:
             generator[0].weight = decoder.embeddings.word_lut.weight
 
-    model = onmt.Models.NMTModel(encoder, decoder, len(opt.gpus) > 1)
+    model = onmt.Models.NMTModel(encoder, decoder, len(opt.gpuid) > 1)
 
     if opt.train_from:
         print('Loading model from checkpoint at %s' % opt.train_from)
@@ -407,17 +407,17 @@ def main():
         generator.load_state_dict(checkpoint['generator'])
         opt.start_epoch = checkpoint['epoch'] + 1
 
-    if len(opt.gpus) >= 1:
+    if len(opt.gpuid) >= 1:
         model.cuda()
         generator.cuda()
     else:
         model.cpu()
         generator.cpu()
 
-    if len(opt.gpus) > 1:
-        print('Multi gpu training ', opt.gpus)
-        model = nn.DataParallel(model, device_ids=opt.gpus, dim=1)
-        generator = nn.DataParallel(generator, device_ids=opt.gpus, dim=0)
+    if len(opt.gpuid) > 1:
+        print('Multi gpu training ', opt.gpuid)
+        model = nn.DataParallel(model, device_ids=opt.gpuid, dim=1)
+        generator = nn.DataParallel(generator, device_ids=opt.gpuid, dim=0)
 
     model.generator = generator
 

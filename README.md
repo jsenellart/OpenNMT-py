@@ -66,7 +66,7 @@ python train.py -data data/demo.train.pt -save_model demo-model
 The main train command is quite simple. Minimally it takes a data file
 and a save file.  This will run the default model, which consists of a
 2-layer LSTM with 500 hidden units on both the encoder/decoder. You
-can also add `-gpus 1` to use (say) GPU 1.
+can also add `-gpuid 0` to use (say) GPU 1.
 
 ## Step 3: Translate
 
@@ -119,7 +119,7 @@ python preprocess.py -train_src data/multi30k/train.en.atok -train_tgt data/mult
 ### 2) Train the model.
 
 ```bash
-python train.py -data data/multi30k.atok.low.train.pt -save_model multi30k_model -gpus 0
+python train.py -data data/multi30k.atok.low.train.pt -save_model multi30k_model -gpuid 0
 ```
 
 ### 3) Translate sentences.

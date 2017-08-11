@@ -87,7 +87,7 @@ parser.add_argument('-position_encoding', action='store_true',
                     help='Use a sinusoid to mark relative words positions.')
 parser.add_argument('-share_decoder_embeddings', action='store_true',
                     help='Share the word and softmax embeddings for decoder.')
-parser.add_argument('-gpus', default=[], nargs='+', type=int,
+parser.add_argument('-gpuid', default=[], nargs='+', type=int,
                     help="Use CUDA on the listed devices.")
 
 opt = parser.parse_known_args()[0]

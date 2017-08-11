@@ -16,7 +16,7 @@ class Embeddings(nn.Module):
         self.positional_encoding = opt.position_encoding
         if self.positional_encoding:
             self.pe = self.make_positional_encodings(opt.word_vec_size, 5000)
-            if len(opt.gpus) > 0:
+            if len(opt.gpuid) > 0:
                 self.pe.cuda()
             self.dropout = nn.Dropout(p=opt.dropout)
 
