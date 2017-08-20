@@ -159,11 +159,13 @@ parser.add_argument('-pre_word_vecs_dec',
 parser.add_argument('-gpuid', default=[], nargs='+', type=int,
                     help="Use CUDA on the listed devices.")
 
-parser.add_argument('-log_interval', type=int, default=50,
-                    help="Print stats at this interval.")
-parser.add_argument('-log_server', type=str, default="",
+parser.add_argument('-exp_log_interval', type=int, default=50,
+                    help="Print stats to the crayon server at this interval.")
+parser.add_argument('-exp_host', type=str, default="",
                     help="Send logs to this crayon server.")
-parser.add_argument('-experiment_name', type=str, default="",
+parser.add_argument('-exp_port', type=int, default=8889,
+                    help="Port of the crayon server.")
+parser.add_argument('-exp', type=str, default="",
                     help="Name of the experiment for logging.")
 
 parser.add_argument('-seed', type=int, default=-1,
@@ -187,15 +189,15 @@ if opt.gpuid:
 
 
 # Set up the Crayon logging server.
-if opt.log_server != "":
+if opt.exp_host != "":
     from pycrayon import CrayonClient
-    cc = CrayonClient(hostname=opt.log_server)
+    cc = CrayonClient(hostname=opt.exp_host, port=opt.exp_port)
 
     experiments = cc.get_experiment_names()
     print(experiments)
     if opt.experiment_name in experiments:
-        cc.remove_experiment(opt.experiment_name)
-    experiment = cc.create_experiment(opt.experiment_name)
+        cc.remove_experiment(opt.exp)
+    experiment = cc.create_experiment(opt.exp)
 
 
 def eval(model, criterion, data):
@@ -267,10 +269,10 @@ def trainModel(model, trainData, validData, dataset, optim):
 
             report_stats.n_src_words += batch.lengths.data.sum()
 
-            if i % opt.log_interval == -1 % opt.log_interval:
+            if i % opt.exp_log_interval == -1 % opt.exp_log_interval:
                 report_stats.output(epoch, i+1, len(trainData),
                                     total_stats.start_time)
-                if opt.log_server:
+                if opt.exp_host:
                     report_stats.log("progress", experiment, optim)
                 report_stats = onmt.Loss.Statistics()
 
@@ -290,7 +292,7 @@ def trainModel(model, trainData, validData, dataset, optim):
         print('Validation accuracy: %g' % valid_stats.accuracy())
 
         # Log to remote server.
-        if opt.log_server:
+        if opt.exp_host:
             train_stats.log("train", experiment, optim)
             valid_stats.log("valid", experiment, optim)
 
